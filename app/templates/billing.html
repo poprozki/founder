@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Тариф и оплата · GisFind{% endblock %}
+{% block crumbs %}<b>Тариф и оплата</b>{% endblock %}
+
+{% block content %}
+<h1>Тариф и оплата</h1>
+<p class="sub">
+  Текущий тариф — <b>{{ plan.title }}</b>.
+  {% if plan.unlimited %}Контакты без лимита.
+  {% else %}Осталось {{ remaining }} из {{ plan.contacts }} контактов в этом периоде.{% endif %}
+</p>
+
+{% if reason == 'quota' %}
+  <div class="note">Лимит контактов на этот месяц исчерпан. Смените тариф, чтобы продолжить сбор.</div>
+{% elif reason == 'changed' %}
+  <div class="note">Тариф переключён. Приём платежей не подключён — см. README, раздел «Что не сделано».</div>
+{% endif %}
+
+<div class="grid">
+  {% for key, p in plans.items() %}
+  <div class="card" {% if key == user.plan %}style="border-color:#17a34a;box-shadow:0 0 0 1px #17a34a"{% endif %}>
+    <h2>{{ p.title }}</h2>
+    <div style="font-size:26px;font-weight:700;margin-bottom:6px">
+      {% if p.price %}{{ p.price }} {{ p.currency }}<span class="sub" style="font-size:14px">/мес</span>
+      {% else %}Бесплатно{% endif %}
+    </div>
+    <p class="sub">До {{ p.contacts }} контактов в месяц</p>
+    <ul style="padding-left:18px;color:#334155;margin:0 0 16px">
+      <li>Сбор из 2ГИС с телефонами и WhatsApp</li>
+      <li>Фильтр «только без сайта»</li>
+      <li>Генерация сообщений и выгрузка CSV</li>
+    </ul>
+    {% if key == user.plan %}
+      <button class="btn btn-block" disabled style="opacity:.55;cursor:default">Ваш тариф</button>
+    {% else %}
+      <form method="post" action="/billing">
+        <input type="hidden" name="plan" value="{{ key }}">
+        <button class="btn btn-block {{ 'btn-ghost' if not p.price }}" type="submit">
+          Переключить на «{{ p.title }}»
+        </button>
+      </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

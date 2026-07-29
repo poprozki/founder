@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}GisFind{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🔍</text></svg>">
+</head>
+<body>
+{% if user %}
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="/search">
+      <span class="brand-mark">◎</span>
+      <span><b>GisFind</b><small>SaaS · v1.0</small></span>
+    </a>
+
+    <div class="nav-group">Рабочее</div>
+    <nav>
+      <a href="/search"    class="{{ 'on' if request.url.path.startswith('/search') or request.url.path.startswith('/runs') }}">Поиск клиентов</a>
+      <a href="/contacts"  class="{{ 'on' if request.url.path == '/contacts' }}">База контактов</a>
+      <a href="/lists"     class="{{ 'on' if request.url.path == '/lists' }}">Сохранённые списки</a>
+      <a href="/templates" class="{{ 'on' if request.url.path == '/templates' }}">Шаблоны и кейсы</a>
+      <a href="/guide"     class="{{ 'on' if request.url.path == '/guide' }}">Гайд: первый клиент</a>
+    </nav>
+
+    <div class="nav-group">Аккаунт</div>
+    <nav>
+      <a href="/billing" class="{{ 'on' if request.url.path == '/billing' }}">Тариф и оплата</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="quota">
+        <b>{{ plan.title }}</b>
+        {% if plan.unlimited %}
+          <span>Без лимита контактов</span>
+          <div class="bar"><i style="width: 100%"></i></div>
+        {% else %}
+          <span>Осталось {{ remaining }} из {{ plan.contacts }} контактов</span>
+          <div class="bar"><i style="width: {{ (100 * remaining / plan.contacts) if plan.contacts else 0 }}%"></i></div>
+        {% endif %}
+      </div>
+      <div class="who">{{ user.email }}</div>
+      <a class="btn btn-ghost btn-block" href="/logout">Выйти</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="crumbs">{% block crumbs %}Рабочее{% endblock %}</div>
+    </header>
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% else %}
+  {% block guest %}{% endblock %}
+{% endif %}
+<script src="/static/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

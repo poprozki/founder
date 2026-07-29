@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Регистрация' if mode == 'signup' else 'Вход' }} · GisFind{% endblock %}
+
+{% block guest %}
+<div class="auth">
+  <div class="auth-card">
+    <h1>GisFind</h1>
+    <p class="sub">Клиенты из 2ГИС — за 30 секунд</p>
+
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+    <form method="post" action="{{ '/signup' if mode == 'signup' else '/login' }}">
+      <label for="email">Почта</label>
+      <input id="email" type="email" name="email" required autocomplete="email"
+             placeholder="you@example.com">
+
+      <label for="password">Пароль</label>
+      <input id="password" type="password" name="password" required
+             autocomplete="{{ 'new-password' if mode == 'signup' else 'current-password' }}"
+             placeholder="{{ 'минимум 6 символов' if mode == 'signup' else '••••••••' }}">
+
+      <button class="btn btn-block" type="submit">
+        {{ 'Создать аккаунт' if mode == 'signup' else 'Войти' }}
+      </button>
+    </form>
+
+    <div class="auth-alt">
+      {% if mode == 'signup' %}
+        Уже есть аккаунт? <a href="/">Войти</a>
+      {% else %}
+        Впервые здесь? <a href="/signup">Зарегистрироваться</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

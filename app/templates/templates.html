@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Шаблоны и кейсы · GisFind{% endblock %}
+{% block crumbs %}<b>Шаблоны и кейсы</b>{% endblock %}
+
+{% block content %}
+<h1>Шаблоны и кейсы</h1>
+<p class="sub">Ссылки на ваши работы. Первая из них автоматически подставляется в сообщения.</p>
+
+<div class="card">
+  <h2>Как вы подписываетесь</h2>
+  <form method="post" action="/profile" class="row">
+    <div>
+      <label for="sender_name">Имя в подписи</label>
+      <input id="sender_name" name="sender_name" value="{{ user.sender_name }}"
+             placeholder="Тимофей">
+    </div>
+    <div style="flex: 2">
+      <label for="sender_offer">Что вы делаете</label>
+      <input id="sender_offer" name="sender_offer" value="{{ user.sender_offer }}"
+             placeholder="сайты, лендинги и воронки в WhatsApp">
+    </div>
+    <div style="flex: 0 0 auto"><button class="btn" type="submit">Сохранить</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Добавить работу</h2>
+  <form method="post" action="/templates" class="row">
+    <div>
+      <label for="title">Название</label>
+      <input id="title" name="title" required placeholder="Лендинг для натяжных потолков">
+    </div>
+    <div style="flex: 2">
+      <label for="url">Ссылка</label>
+      <input id="url" name="url" placeholder="https://example.kz">
+    </div>
+    <div style="flex: 0 0 auto"><button class="btn" type="submit">Добавить</button></div>
+  </form>
+</div>
+
+{% if not items %}
+  <div class="card empty">
+    Работ пока нет. Даже одна ссылка сильно повышает ответы —
+    если портфолио ещё нет, соберите демо-страницу и добавьте её сюда.
+  </div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <tr><th>Название</th><th>Ссылка</th><th></th></tr>
+    {% for t in items %}
+    <tr>
+      <td><b>{{ t.title }}</b>{% if loop.first %} <span class="chip">в сообщениях</span>{% endif %}</td>
+      <td>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.url }}</a>{% else %}—{% endif %}</td>
+      <td style="text-align:right">
+        <form method="post" action="/templates/{{ t.id }}/delete">
+          <button class="btn btn-ghost btn-sm" type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

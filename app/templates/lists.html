@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Сохранённые списки · GisFind{% endblock %}
+{% block crumbs %}<b>Сохранённые списки</b>{% endblock %}
+
+{% block content %}
+<h1>Сохранённые списки</h1>
+<p class="sub">Закладки на удачные сборы, чтобы возвращаться к ним и дожимать.</p>
+
+{% if not saved %}
+  <div class="card empty">
+    Списков пока нет. Откройте любой сбор и нажмите «Сохранить список».
+  </div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <tr><th>Название</th><th>Ниша и город</th><th>Собрано</th><th>Без сайта</th><th></th></tr>
+    {% for s in saved %}
+      {% set r = runs.get(s.run_id) %}
+      <tr>
+        <td><b>{{ s.name }}</b></td>
+        <td class="lead-ext">{% if r %}{{ r.niche }} · {{ r.city_name }}{% else %}сбор удалён{% endif %}</td>
+        <td>{{ r.collected if r else '—' }}</td>
+        <td>{% if r and r.hot_count %}<span class="hot">{{ r.hot_count }}</span>{% else %}—{% endif %}</td>
+        <td style="text-align:right">
+          {% if r %}<a class="btn btn-ghost btn-sm" href="/runs/{{ r.id }}">Открыть</a>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

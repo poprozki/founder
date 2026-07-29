@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}База контактов · GisFind{% endblock %}
+{% block crumbs %}<b>База контактов</b>{% endblock %}
+
+{% block content %}
+<h1>База контактов</h1>
+<p class="sub">Всё, что вы собрали — в одном месте. Последние 500 записей.</p>
+
+<form class="card row" method="get" action="/contacts">
+  <div style="flex: 3">
+    <input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию или нише">
+  </div>
+  <div style="flex: 0 0 auto"><button class="btn" type="submit">Найти</button></div>
+  {% if q %}<div style="flex: 0 0 auto"><a class="btn btn-ghost" href="/contacts">Сбросить</a></div>{% endif %}
+</form>
+
+{% if not rows %}
+  <div class="card empty">Пока пусто. <a href="/search" style="color:#12833b"><b>Запустите первый поиск</b></a>.</div>
+{% else %}
+<div class="table-wrap">
+  <table>
+    <tr><th>Организация</th><th>Ниша</th><th>Город</th><th>Телефон</th><th>Сайт</th><th></th></tr>
+    {% for lead, run in rows %}
+    <tr>
+      <td>
+        <b>{{ lead.name }}</b>
+        {% if lead.rating %}<span class="lead-rate"> ★ {{ lead.rating }}</span>{% endif %}
+      </td>
+      <td class="lead-ext">{{ lead.rubric }}</td>
+      <td class="lead-ext">{{ run.city_name }}</td>
+      <td>{{ lead.primary_phone or '—' }}</td>
+      <td>
+        {% if lead.website %}<a href="{{ lead.website }}" target="_blank" rel="noopener">есть</a>
+        {% else %}<span class="hot">нет</span>{% endif %}
+      </td>
+      <td style="text-align:right">
+        {% if lead.wa_number %}
+          <a class="chip wa" target="_blank" rel="noopener"
+             href="https://wa.me/{{ lead.wa_number }}">WhatsApp</a>
+        {% endif %}
+        <a class="chip" href="/runs/{{ run.id }}">Сбор</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

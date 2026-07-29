@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}{{ run.niche }} · {{ run.city_name }} · GisFind{% endblock %}
+{% block crumbs %}<a href="/search">Рабочее</a> / <b>Результаты сбора</b>{% endblock %}
+
+{% block content %}
+<h1>{{ run.niche|capitalize }} · {{ run.city_name }}</h1>
+<p class="sub">
+  {{ run.collected }} организаций собрано ·
+  {% if run.hot_count %}<span class="hot">{{ run.hot_count }} без сайта (горячие)</span>
+  {% else %}0 без сайта{% endif %}
+  {% if run.total_in_city %} · всего в городе ~{{ run.total_in_city }}{% endif %}
+</p>
+
+{% if note %}<div class="note">{{ note }}</div>{% endif %}
+
+{% if run.status == 'done' and run.collected < run.requested %}
+  <div class="note">
+    Запрашивали {{ run.requested }}, собрано {{ run.collected }} —
+    {% if run.hot_only %}в этой нише закончились организации <b>без сайта</b>{%
+    else %}в этой нише закончились организации с контактами{% endif %}.
+    {% if run.total_in_city %}Всего в «{{ run.niche }}» по городу ~{{ run.total_in_city }}.{% endif %}
+    Попробуйте соседнюю нишу или другой город.
+  </div>
+{% endif %}
+
+{% if run.status in ('pending', 'running') %}
+  <div class="card" data-run-poll="{{ run.id }}">
+    <div class="status">
+      <div class="spinner"></div>
+      <div>
+        <b>Собираю данные из 2ГИС…</b><br>
+        <span class="sub" data-stage>{{ run.stage or 'Запускаю браузер…' }}</span>
+      </div>
+    </div>
+    <p class="sub" style="margin: 14px 0 0">
+      Открывается настоящий браузер и проходит по карточкам — примерно 8–10 секунд на организацию.
+      Страницу можно не держать открытой.
+    </p>
+  </div>
+
+{% elif run.status == 'error' %}
+  <div class="error"><b>Сбор не удался.</b><br>{{ run.error }}</div>
+  <a class="btn" href="/search">Попробовать снова</a>
+
+{% else %}
+
+<div class="tabs">
+  <a href="#leads" class="on" onclick="showTab('leads',this)">Лиды ({{ leads|length }})</a>
+  <a href="#messages" onclick="showTab('messages',this)">Сообщения ({{ messages|length }})</a>
+</div>
+
+<section id="tab-leads">
+  {% if messages|length == 0 and leads %}
+  <div class="banner">
+    <div>
+      <b>Найдено {{ leads|length }} контактов — теперь напишите им</b>
+      <span>Текст соберётся под каждый бизнес: с учётом рейтинга, отзывов и наличия сайта.</span>
+    </div>
+    <a class="btn" href="#messages" onclick="showTab('messages',document.querySelectorAll('.tabs a')[1])">
+      Сгенерировать сообщения →
+    </a>
+  </div>
+  {% endif %}
+
+  <div class="row" style="margin-bottom: 16px">
+    <div style="flex: 0 0 auto">
+      <button class="btn btn-ghost btn-sm" data-phones="{{ run.id }}">Скопировать все телефоны</button>
+    </div>
+    <div style="flex: 0 0 auto">
+      <a class="btn btn-ghost btn-sm" href="/runs/{{ run.id }}/csv">Скачать CSV</a>
+    </div>
+    <div style="flex: 0 0 auto">
+      <form method="post" action="/lists" class="row" style="gap: 8px">
+        <input type="hidden" name="run_id" value="{{ run.id }}">
+        <input type="text" name="name" placeholder="Название списка"
+               value="{{ run.niche }} · {{ run.city_name }}" style="min-width: 230px">
+        <button class="btn btn-ghost btn-sm" type="submit">Сохранить список</button>
+      </form>
+    </div>
+  </div>
+
+  {% if not leads %}
+    <div class="card empty">
+      Ничего не собралось. Обычно это значит, что в этом городе по такой нише
+      нет организаций с телефонами — попробуйте другую формулировку или город.
+    </div>
+  {% endif %}
+
+  <div class="grid">
+    {% for x in leads %}
+    <article class="lead {{ 'is-hot' if x.is_hot }}">
+      <div class="lead-head">
+        <div>
+          <div class="lead-name">{{ x.name }}</div>
+          {% if x.extension %}<div class="lead-ext">{{ x.extension }}</div>{% endif %}
+        </div>
+        <div class="lead-rate">
+          {% if x.rating %}★ {{ x.rating }}{% endif %}
+          {% if x.reviews_count %}<span class="lead-ext">· {{ x.reviews_count }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="lead-addr">{{ x.rubric }}{% if x.address %} · {{ x.address }}{% endif %}</div>
+
+      {% if x.phones %}
+        <div class="phones">
+          {% for p in x.phones %}
+            {% set digits = p | replace('+', '') %}
+            <div class="phone-row">
+              <button class="phone" data-copy="{{ p }}" title="Скопировать">{{ p }}</button>
+              <a class="chip wa" target="_blank" rel="noopener"
+                 href="https://wa.me/{{ digits }}" title="Написать в WhatsApp">WA</a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="phone-none">Телефон не указан</div>
+      {% endif %}
+
+      <div class="chips">
+        {% if x.website %}
+          <a class="chip" target="_blank" rel="noopener" href="{{ x.website }}">Сайт</a>
+        {% else %}
+          <span class="chip chip-hot">Без сайта</span>
+        {% endif %}
+        {% if x.instagram %}
+          <a class="chip" target="_blank" rel="noopener" href="{{ x.instagram }}">Instagram</a>
+        {% endif %}
+        {% if x.telegram %}
+          <a class="chip" target="_blank" rel="noopener" href="{{ x.telegram }}">Telegram</a>
+        {% endif %}
+        {% if x.whatsapp %}
+          <a class="chip wa" target="_blank" rel="noopener" href="{{ x.whatsapp }}">WhatsApp</a>
+        {% endif %}
+        {% if x.email %}
+          <button class="chip" data-copy="{{ x.email }}" title="Скопировать">{{ x.email }}</button>
+        {% endif %}
+        <a class="chip chip-2gis" target="_blank" rel="noopener"
+           href="https://2gis.kz/{{ run.city_slug }}/firm/{{ x.org_id }}">2ГИС ↗</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="tab-messages" style="display: none">
+  <div class="card">
+    <form method="post" action="/runs/{{ run.id }}/messages" class="row">
+      <div>
+        <label for="angle">Угол захода</label>
+        <select id="angle" name="angle">
+          {% for key, title in angles.items() %}<option value="{{ key }}">{{ title }}</option>{% endfor %}
+        </select>
+      </div>
+      <div style="flex: 0 0 auto">
+        <label class="check">
+          <input type="checkbox" name="hot_only" value="1">
+          Только горячим ({{ run.hot_count }})
+        </label>
+      </div>
+      <div style="flex: 0 0 auto">
+        <button class="btn" type="submit">
+          {{ 'Перегенерировать' if messages else 'Сгенерировать' }}
+        </button>
+      </div>
+    </form>
+    <p class="sub" style="margin: 12px 0 0">
+      Текст пишется под каждую организацию — с учётом рейтинга, отзывов и наличия сайта.
+      Отправляете вы сами, авторассылки нет.
+    </p>
+  </div>
+
+  {% if not messages %}
+    <div class="card empty">
+      Нажмите «Сгенерировать» — система напишет персональное сообщение
+      для каждой организации с учётом рейтинга и наличия сайта.
+    </div>
+  {% endif %}
+
+  {% for x in leads %}
+    {% set m = messages.get(x.id) %}
+    {% if m %}
+    <div class="msg">
+      <div class="msg-head">
+        <b>{{ x.name }}</b>
+        <span>{{ x.primary_phone or '—' }}{% if x.is_hot %} · без сайта{% endif %}</span>
+      </div>
+      <div class="msg-body" id="msg-{{ m.id }}">{{ m.text }}</div>
+      <div class="msg-foot">
+        {% if x.wa_number %}
+          <a class="btn btn-sm" target="_blank" rel="noopener"
+             href="https://wa.me/{{ x.wa_number }}?text={{ m.text|urlencode }}">В WhatsApp</a>
+        {% endif %}
+        <button class="btn btn-ghost btn-sm" data-copy="target" data-target="#msg-{{ m.id }}">
+          Копировать
+        </button>
+        <span class="len">{{ m.text|length }} зн. · {{ m.source }}</span>
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+</section>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(name, el) {
+  document.getElementById('tab-leads').style.display = name === 'leads' ? '' : 'none';
+  document.getElementById('tab-messages').style.display = name === 'messages' ? '' : 'none';
+  document.querySelectorAll('.tabs a').forEach(a => a.classList.remove('on'));
+  if (el) el.classList.add('on');
+}
+if (location.hash === '#messages') {
+  showTab('messages', document.querySelectorAll('.tabs a')[1]);
+}
+</script>
+{% endblock %}

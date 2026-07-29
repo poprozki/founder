@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Поиск клиентов · GisFind{% endblock %}
+{% block crumbs %}<b>Поиск клиентов</b>{% endblock %}
+
+{% block content %}
+<h1>Найти клиентов</h1>
+<p class="sub">Выберите нишу и город — соберу организации с телефонами и отмечу тех, у кого нет сайта.</p>
+
+<div class="card">
+  <form method="post" action="/search">
+    <div class="row">
+      <div style="flex: 2">
+        <label for="niche">Ниша</label>
+        <input id="niche" name="niche" list="niches" required
+               placeholder="например: изготовление вывесок" autocomplete="off">
+        <datalist id="niches">
+          {% for n in all_niches %}<option value="{{ n }}"></option>{% endfor %}
+        </datalist>
+      </div>
+      <div>
+        <label for="city">Город</label>
+        <select id="city" name="city">
+          {% for slug, title in cities %}
+            <option value="{{ slug }}" {{ 'selected' if slug == 'almaty' }}>{{ title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="narrow">
+        <label for="limit">Сколько</label>
+        <input id="limit" type="number" name="limit" value="10" min="1" max="100">
+      </div>
+      <div style="flex: 0 0 auto">
+        <button class="btn" type="submit">Запустить поиск →</button>
+      </div>
+    </div>
+
+    <label class="check" style="margin-top: 14px">
+      <input type="checkbox" name="hot_only" value="1" checked>
+      Только горячие — собрать указанное количество организаций <b>без сайта</b>
+    </label>
+    <p class="sub" style="margin: 6px 0 0; font-size: 13px">
+      Снимите галочку, если нужны все подряд — тогда часть лидов будет с сайтом.
+    </p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Ниши, где чаще всего нет сайта</h2>
+  <div class="chips">
+    {% for n in recommended %}
+      <a class="chip" href="#" onclick="document.getElementById('niche').value='{{ n }}';window.scrollTo({top:0,behavior:'smooth'});return false;">{{ n }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Все ниши · {{ all_niches|length }}</h2>
+  {% for group, items in groups.items() %}
+    <div style="margin-bottom: 14px">
+      <label>{{ group }}</label>
+      <div class="chips">
+        {% for n in items %}
+          <a class="chip" href="#" onclick="document.getElementById('niche').value='{{ n }}';window.scrollTo({top:0,behavior:'smooth'});return false;">{{ n }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if runs %}
+<h2 style="margin-top: 26px">Последние сборы</h2>
+<div class="table-wrap">
+  <table>
+    <tr><th>Ниша</th><th>Город</th><th>Собрано</th><th>Без сайта</th><th>Статус</th><th></th></tr>
+    {% for r in runs %}
+    <tr>
+      <td><a href="/runs/{{ r.id }}"><b>{{ r.niche }}</b></a></td>
+      <td>{{ r.city_name }}</td>
+      <td>{{ r.collected }}</td>
+      <td>{% if r.hot_count %}<span class="hot">{{ r.hot_count }}</span>{% else %}0{% endif %}</td>
+      <td>
+        {% if r.status == 'done' %}готово
+        {% elif r.status == 'error' %}<span class="hot">ошибка</span>
+        {% else %}в работе…{% endif %}
+      </td>
+      <td style="text-align: right">
+        <form method="post" action="/runs/{{ r.id }}/delete"
+              onsubmit="return confirm('Удалить сбор «{{ r.niche }}» и все его контакты?')">
+          <button class="btn btn-ghost btn-sm" type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}
